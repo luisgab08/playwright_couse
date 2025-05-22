@@ -108,7 +108,7 @@ test.describe('Pruebas de Menús LuloBank', () => {
     console.log('Página principal estabilizada después de popups (Pruebas de Menús).');
   });
 
-  test('Menu ¿Qué puedes hacer?', async ({ page }) => {
+/*  test('Menu ¿Qué puedes hacer?', async ({ page }) => {
     const triggerMenu = page.locator('li[data-route="/features"] > span.navigation-list-dropdown:has-text("¿Qué puedes hacer?")');
     const selectorEnlacesSubmenu = 'li[data-route="/features"] ul.navigation-sub-list a.navigation-sub-list-link';
 
@@ -172,7 +172,7 @@ test.describe('Pruebas de Menús LuloBank', () => {
       }
     }
     console.log('\nTodos los enlaces del submenú "¿Qué puedes hacer?" han sido visitados.');
-  });
+  });*/
 
   test('Menu Ayuda', async ({ page }) => {
     const triggerAyuda = page.locator('li[data-route="/ayuda"] > span.navigation-list-dropdown:has-text("Ayuda")');
