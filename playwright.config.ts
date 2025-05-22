@@ -44,7 +44,7 @@ export default defineConfig({
   /* Configure projects for major browsers */
   projects: [
     {
-      workers: 1,
+      //workers: 1,
       //name: 'Google chrome stable',
       name: 'chrome',
       use: { ...devices['Desktop Chrome'], launchOptions: {
