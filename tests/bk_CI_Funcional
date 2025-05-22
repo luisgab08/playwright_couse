@@ -88,7 +88,7 @@ test.describe('Pruebas Generales LuloBank', () => {
     console.log(`Navegando a ${paginaLulo} para Pruebas Generales`);
     await page.goto(paginaLulo, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await handlePopups(page); 
-    await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 30000 }); 
+    await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 15000 }); 
     console.log('Página principal estabilizada después de popups (Pruebas Generales).');
   });
 
@@ -104,13 +104,11 @@ test.describe('Pruebas de Menús LuloBank', () => {
     console.log(`Navegando a ${paginaLulo} para Pruebas de Menús`);
     await page.goto(paginaLulo, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await handlePopups(page);
-    await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 30000 }); 
+    await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 15000 }); 
     console.log('Página principal estabilizada después de popups (Pruebas de Menús).');
   });
 
-  
-
-/*  test.('Menu ¿Qué puedes hacer?', async ({ page }) => {
+/*  test('Menu ¿Qué puedes hacer?', async ({ page }) => {
     const triggerMenu = page.locator('li[data-route="/features"] > span.navigation-list-dropdown:has-text("¿Qué puedes hacer?")');
     const selectorEnlacesSubmenu = 'li[data-route="/features"] ul.navigation-sub-list a.navigation-sub-list-link';
 
@@ -200,7 +198,7 @@ test.describe('Pruebas de Menús LuloBank', () => {
        if (i > 0 || !(await subMenu.isVisible({timeout: 2000}))) { 
           console.log('Submenú no visible o no es la primera iteración, reabriendo menú principal...');
           await triggerAyuda.waitFor({ state: 'visible', timeout: 10000 });
-          await triggerAyuda.click({timeout: 40000});
+          await triggerAyuda.click({timeout: 10000});
           await subMenu.waitFor({ state: 'visible', timeout: 5000 });
       }
 
@@ -239,7 +237,7 @@ test.describe('Pruebas de Menús LuloBank', () => {
             }
         }
       } else { 
-        await enlaceActual.click({timeout: 60000});
+        await enlaceActual.click({timeout: 10000});
         try {
           console.log('Esperando cambio de URL o contenido de la nueva página interna...');
           await page.waitForURL(urlObj => {
@@ -276,13 +274,13 @@ test.describe('Pruebas de Navegación Directa LuloBank', () => {
     console.log(`Navegando a ${paginaLulo} para Pruebas de Navegación Directa`);
     await page.goto(paginaLulo, { waitUntil: 'domcontentloaded', timeout: 60000 }); 
     await handlePopups(page);
-    await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 30000 });
+    await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 15000 });
     console.log('Página principal estabilizada después de popups (Pruebas de Navegación Directa).');
   });
 
   test('Snacks', async ({ page }) => {
     await page.locator('//a[contains(@href, \'/snacks\')]').getByText('Snacks').click();
-    //await page.waitForURL(/.*\/snacks/, { timeout: 60000 });
+    await page.waitForURL(/.*\/snacks/, { timeout: 20000 });
     await expect(page).toHaveTitle('Lulo bank - Snacks');
     await handlePopups(page); 
     console.log('Navegado a la página de Snacks.');
@@ -290,7 +288,7 @@ test.describe('Pruebas de Navegación Directa LuloBank', () => {
 
   test('Nosotros', async ({ page }) => {
     await page.locator('//a[contains(@href, \'/about\')]').getByText('Nosotros').click();
-    //await page.waitForURL(/.*\/about/, { timeout: 60000 });
+    await page.waitForURL(/.*\/about/, { timeout: 20000 });
     await expect(page).toHaveTitle('Lulo bank - Nosotros');
     await handlePopups(page); 
     console.log('Navegado a la página Nosotros.');
@@ -298,7 +296,7 @@ test.describe('Pruebas de Navegación Directa LuloBank', () => {
 
   test('Tips de seguridad', async ({ page }) => {
     await page.locator('//a[contains(@href, \'/tips-de-seguridad\')]').getByText('Tips de seguridad').click();
-    //await page.waitForURL(/.*\/tips-de-seguridad/, { timeout: 60000 });
+    await page.waitForURL(/.*\/tips-de-seguridad/, { timeout: 20000 });
     await expect(page).toHaveTitle('Lulo bank - Tips de seguridad');
     await handlePopups(page); 
     console.log('Navegado a la página Tips de seguridad.');
@@ -313,12 +311,12 @@ const PAGINA_DESCARGA: string = 'https://www.lulobank.com/descarga-lulo-bank';
 test.describe('Pruebas de la página de descarga de Lulo Bank', () => {
   test('Debe cargar la página de descarga y verificar los enlaces de las tiendas', async ({ page }) => {
     console.log(`Navegando a ${PAGINA_DESCARGA}`);
-    await page.goto(PAGINA_DESCARGA, { waitUntil: 'domcontentloaded', timeout: 80000 }); 
+    await page.goto(PAGINA_DESCARGA, { waitUntil: 'domcontentloaded', timeout: 60000 }); 
     await handlePopups(page); 
     
     console.log('Esperando estabilización de página de descarga después de manejar popups...');
     const seccionDescargaPrincipal = page.locator('div.download-app-introduction-section-content');
-    await expect(seccionDescargaPrincipal).toBeVisible({timeout: 60000}); 
+    await expect(seccionDescargaPrincipal).toBeVisible({timeout: 20000}); 
 
     await expect(page).toHaveTitle(/Lulo bank - Descarga y prueba la app/, {timeout: 10000});
 

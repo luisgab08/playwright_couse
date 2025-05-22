@@ -46,7 +46,7 @@ export default defineConfig({
     {
       workers: 1,
       //name: 'Google chrome stable',
-      name: 'chromium',
+      name: 'chrome',
       use: { ...devices['Desktop Chrome'], launchOptions: {
         //executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
         // Podrías mantener --disable-gpu aquí si quieres probar eso también:
@@ -54,16 +54,19 @@ export default defineConfig({
       } },
     },
 
-    /*{
+/*    {
+      workers: 1,
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'], launchOptions: {
+        args: ['--start-maximized']
+      } },
+    }*/
+/*
+    {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-
+    },*/
+/*
      Test against mobile viewports. */
     // {
     //   name: 'Mobile Chrome',
