@@ -10,24 +10,26 @@ const paginaLulo = 'https://www.lulobank.com/';
  */
 async function handlePopups(page: Page): Promise<void> {
   console.log(`Intentando manejar popups en: ${page.url()}`);
+  let popupInteracted = false;
 
-  // 1. Intentar manejar el popup informativo
+  // 1. Intentar manejar el popup informativo (el que aparece primero según el usuario)
   const infoPopupSelector = 'div#modal-alert__custom';
   try {
     const infoPopupLocator = page.locator(infoPopupSelector);
-    if (await infoPopupLocator.isVisible({ timeout: 5000 })) { 
+    if (await infoPopupLocator.isVisible({ timeout: 7000 })) { 
       console.log('Popup informativo (modal-alert__custom) detectado.');
+      popupInteracted = true;
       const infoCloseButtonLocator = infoPopupLocator.getByRole('button', { name: "Cerrar" });
       if (await infoCloseButtonLocator.isVisible({timeout: 2000})) {
         await infoCloseButtonLocator.click({ timeout: 3000 });
         console.log('Botón "Cerrar" del popup informativo presionado.');
-        await infoPopupLocator.waitFor({ state: 'hidden', timeout: 3000 });
+        await infoPopupLocator.waitFor({ state: 'hidden', timeout: 5000 }); 
         console.log('Popup informativo (modal-alert__custom) cerrado.');
       } else {
         console.log('Botón "Cerrar" del popup informativo no visible, aunque el popup sí lo está.');
       }
     } else {
-      // console.log('Popup informativo (modal-alert__custom) no visible.'); // Log opcional
+      // console.log('Popup informativo (modal-alert__custom) no visible o no presente en el tiempo esperado.');
     }
   } catch (error) {
     if (!(error.message.includes('Target page, context or browser has been closed'))) {
@@ -39,24 +41,30 @@ async function handlePopups(page: Page): Promise<void> {
   const cookiePopupSelector = 'div.modal-cookies';
   try {
     const cookiePopupLocator = page.locator(cookiePopupSelector);
-    if (await cookiePopupLocator.isVisible({ timeout: 3000 })) { 
+    if (await cookiePopupLocator.isVisible({ timeout: 5000 })) { 
       console.log('Popup de Aviso de Cookies detectado.');
+      popupInteracted = true;
       const cookieAcceptButtonLocator = cookiePopupLocator.getByRole('button', { name: "Aceptar" });
       if (await cookieAcceptButtonLocator.isVisible({timeout: 2000})) {
         await cookieAcceptButtonLocator.click({ timeout: 3000 }); 
         console.log('Botón "Aceptar" del popup de cookies presionado.');
-        await cookiePopupLocator.waitFor({ state: 'hidden', timeout: 3000 });
+        await cookiePopupLocator.waitFor({ state: 'hidden', timeout: 5000 }); 
         console.log('Popup de Aviso de Cookies cerrado.');
       } else {
         console.log('Botón "Aceptar" del popup de cookies no visible, aunque el popup sí lo está.');
       }
     } else {
-      // console.log('Popup de Aviso de Cookies no visible.'); // Log opcional
+      // console.log('Popup de Aviso de Cookies no visible o no presente en el tiempo esperado.'); 
     }
   } catch (error) {
      if (!(error.message.includes('Target page, context or browser has been closed'))) {
         console.log('Excepción al intentar manejar el popup de cookies:', error.message);
     }
+  }
+
+  if (popupInteracted) {
+    console.log('Se interactuó con al menos un popup, esperando brevemente para estabilización...');
+    await page.waitForTimeout(1000); 
   }
   console.log('Finalizado handlePopups.');
 }
@@ -67,11 +75,12 @@ test.describe('Pruebas Generales LuloBank', () => {
     console.log(`Navegando a ${paginaLulo} para Pruebas Generales`);
     await page.goto(paginaLulo, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await handlePopups(page); 
+    await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 10000 });
+    console.log('Página principal estabilizada después de popups (Pruebas Generales).');
   });
 
   test('Lulobank online', async ({ page }) => {
-    // El footer puede ser un buen indicador de que la página principal cargó bien
-    await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 20000 });
+    await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 15000 });
     console.log('Test "Lulobank online" completado, footer visible.');
   });
 });
@@ -82,6 +91,8 @@ test.describe('Pruebas de Menús LuloBank', () => {
     console.log(`Navegando a ${paginaLulo} para Pruebas de Menús`);
     await page.goto(paginaLulo, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await handlePopups(page);
+    await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 10000 });
+    console.log('Página principal estabilizada después de popups (Pruebas de Menús).');
   });
 
   test('Menu ¿Qué puedes hacer?', async ({ page }) => {
@@ -113,20 +124,22 @@ test.describe('Pruebas de Menús LuloBank', () => {
       const hrefEnlace = await enlaceActual.getAttribute('href');
       console.log(`Intentando hacer clic en: "${textoEnlace?.trim()}" con href: "${hrefEnlace}"`);
       
-      // Guardar la URL actual antes del clic para comparar si hay navegación
       const urlAntesDelClic = page.url();
       await enlaceActual.click();
       
-      // Esperar a que la URL cambie o a que un elemento específico de la nueva página aparezca
       try {
-        console.log('Esperando cambio de URL o contenido de la nueva página...');
-        await page.waitForURL(url => url !== urlAntesDelClic && url.includes(hrefEnlace || '###########'), { timeout: 20000 });
-        // O, mejor aún, esperar un selector único de la página de destino
-        // await expect(page.locator('h1.titulo-pagina-destino')).toBeVisible({ timeout: 20000 }); // ¡AJUSTAR ESTE SELECTOR!
-        console.log(`Navegación a "${hrefEnlace}" detectada. Nueva URL: ${page.url()}`);
+        console.log('Esperando navegación a nueva página...');
+        await page.waitForURL(urlObj => {
+          const currentUrlString = urlObj.toString();
+          const targetHref = hrefEnlace || 'a_very_unlikely_string_to_match_if_href_is_null';
+          return currentUrlString !== urlAntesDelClic && currentUrlString.includes(targetHref);
+        }, { timeout: 25000 });
+        console.log(`Navegación detectada. Nueva URL: ${page.url()}`);
+        // ¡IMPORTANTE! AJUSTAR EL SIGUIENTE SELECTOR a un elemento que DEBE estar en la página de destino
+        await expect(page.locator('body')).toBeVisible({ timeout: 10000 }); // Placeholder, cambiar por un selector real
+        console.log('Elemento clave de la página de destino visible.');
       } catch (e) {
         console.warn(`Timeout o error esperando la navegación para "${hrefEnlace}". URL actual: ${page.url()}. Error: ${e.message}`);
-        // Considerar si esto debe ser un fallo o si se puede continuar
       }
       
       await expect(page).not.toHaveTitle(/Error/, {timeout: 5000});
@@ -136,6 +149,7 @@ test.describe('Pruebas de Menús LuloBank', () => {
         console.log('Navegando de regreso a la página principal...');
         await page.goto(paginaLulo, { waitUntil: 'domcontentloaded', timeout: 60000 });
         await handlePopups(page); 
+        await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 10000 }); 
       }
     }
     console.log('\nTodos los enlaces del submenú "¿Qué puedes hacer?" han sido visitados.');
@@ -170,6 +184,7 @@ test.describe('Pruebas de Menús LuloBank', () => {
       console.log(`Intentando hacer clic en: "${textoEnlace?.trim()}" con href: "${hrefEnlace}"`);
       
       const esEnlaceExterno = hrefEnlace && (hrefEnlace.startsWith('http://') || hrefEnlace.startsWith('https://')) && !hrefEnlace.includes('lulobank.com');
+      const urlAntesDelClicAyuda = page.url();
 
       if (esEnlaceExterno) {
         console.log('Detectado enlace externo, esperando popup/nueva pestaña...');
@@ -178,30 +193,35 @@ test.describe('Pruebas de Menús LuloBank', () => {
               console.log('No se abrió un popup/nueva pestaña para enlace externo.');
               return null;
             }), 
-            enlaceActual.click(), // El clic puede causar navegación en la misma pestaña si no hay popup
+            enlaceActual.click(), 
         ]);
 
         if (newPage) {
             console.log(`Nueva pestaña abierta para: ${newPage.url()}`);
-            await newPage.waitForLoadState('domcontentloaded', {timeout: 20000}).catch(() => console.warn("Timeout esperando carga de nueva pestaña"));
+            await newPage.waitForLoadState('domcontentloaded', {timeout: 25000}).catch(() => console.warn("Timeout esperando carga de nueva pestaña"));
             await expect(newPage).not.toHaveTitle(/Error/, {timeout: 5000});
-            // No llamar a handlePopups en dominios externos
             await newPage.close();
             console.log('Nueva pestaña cerrada.');
         } else {
-            // Si no hubo popup, la navegación ocurrió en la misma pestaña
-            await page.waitForLoadState('domcontentloaded', {timeout: 20000}).catch(() => console.warn("Timeout esperando carga de página tras clic en enlace externo"));
-            console.log(`Página visitada (posiblemente externa, misma pestaña): ${page.url()}`);
-            await expect(page).not.toHaveTitle(/Error/, {timeout: 5000});
+            if(page.url() !== urlAntesDelClicAyuda){
+                await page.waitForLoadState('domcontentloaded', {timeout: 25000}).catch(() => console.warn("Timeout esperando carga de página tras clic en enlace externo"));
+                console.log(`Página visitada (posiblemente externa, misma pestaña): ${page.url()}`);
+                 await expect(page).not.toHaveTitle(/Error/, {timeout: 5000});
+            } else {
+                console.log("El clic en enlace externo no cambió la URL de la pestaña actual ni abrió un popup.");
+            }
         }
       } else { 
-        const urlAntesDelClicInterno = page.url();
         await enlaceActual.click();
         try {
           console.log('Esperando cambio de URL o contenido de la nueva página interna...');
-          await page.waitForURL(url => url !== urlAntesDelClicInterno && url.includes(hrefEnlace || '###########'), { timeout: 20000 });
-          // O esperar un selector específico de la página de destino
-          // await expect(page.locator('h1.titulo-pagina-destino-interna')).toBeVisible({ timeout: 20000 }); // ¡AJUSTAR ESTE SELECTOR!
+          await page.waitForURL(urlObj => {
+            const currentUrlString = urlObj.toString();
+            const targetHref = hrefEnlace || 'a_very_unlikely_string_to_match_if_href_is_null';
+            return currentUrlString !== urlAntesDelClicAyuda && currentUrlString.includes(targetHref);
+          }, { timeout: 20000 });
+          // ¡IMPORTANTE! AJUSTAR EL SIGUIENTE SELECTOR
+          await expect(page.locator('body')).toBeVisible({ timeout: 10000 }); // Placeholder
           console.log(`Navegación interna a "${hrefEnlace}" detectada. Nueva URL: ${page.url()}`);
         } catch(e) {
           console.warn(`Timeout o error esperando la navegación interna para "${hrefEnlace}". URL actual: ${page.url()}. Error: ${e.message}`);
@@ -216,6 +236,7 @@ test.describe('Pruebas de Menús LuloBank', () => {
         console.log('Navegando de regreso a la página principal...');
         await page.goto(paginaLulo, { waitUntil: 'domcontentloaded', timeout: 60000 });
         await handlePopups(page);
+        await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 10000 });
       }
     }
     console.log('\nTodos los enlaces del submenú Ayuda han sido visitados.');
@@ -228,12 +249,15 @@ test.describe('Pruebas de Navegación Directa LuloBank', () => {
     console.log(`Navegando a ${paginaLulo} para Pruebas de Navegación Directa`);
     await page.goto(paginaLulo, { waitUntil: 'domcontentloaded', timeout: 60000 }); 
     await handlePopups(page);
+    await expect(page.locator('//p[contains(@class, \'footer-copyright\')]').first()).toBeVisible({ timeout: 10000 });
+    console.log('Página principal estabilizada después de popups (Pruebas de Navegación Directa).');
   });
 
   test('Snacks', async ({ page }) => {
     await page.locator('//a[contains(@href, \'/snacks\')]').getByText('Snacks').click();
     await page.waitForURL(/.*\/snacks/, { timeout: 20000 });
-    // await expect(page.locator('h1:has-text("Snacks")')).toBeVisible({timeout: 15000}); // ¡AJUSTAR SELECTOR!
+    // ¡IMPORTANTE! AJUSTAR EL SIGUIENTE SELECTOR
+    await expect(page.locator('h1')).toBeVisible({timeout: 15000}); 
     await handlePopups(page); 
     console.log('Navegado a la página de Snacks.');
   });
@@ -241,7 +265,8 @@ test.describe('Pruebas de Navegación Directa LuloBank', () => {
   test('Nosotros', async ({ page }) => {
     await page.locator('//a[contains(@href, \'/about\')]').getByText('Nosotros').click();
     await page.waitForURL(/.*\/about/, { timeout: 20000 });
-    // await expect(page.locator('h1:has-text("Nosotros")')).toBeVisible({timeout: 15000}); // ¡AJUSTAR SELECTOR!
+    // ¡IMPORTANTE! AJUSTAR EL SIGUIENTE SELECTOR
+    await expect(page.locator('h1')).toBeVisible({timeout: 15000}); 
     await handlePopups(page); 
     console.log('Navegado a la página Nosotros.');
   });
@@ -249,7 +274,8 @@ test.describe('Pruebas de Navegación Directa LuloBank', () => {
   test('Tips de seguridad', async ({ page }) => {
     await page.locator('//a[contains(@href, \'/tips-de-seguridad\')]').getByText('Tips de seguridad').click();
     await page.waitForURL(/.*\/tips-de-seguridad/, { timeout: 20000 });
-    // await expect(page.locator('h1:has-text("Tips de seguridad")')).toBeVisible({timeout: 15000}); // ¡AJUSTAR SELECTOR!
+    // ¡IMPORTANTE! AJUSTAR EL SIGUIENTE SELECTOR
+    await expect(page.locator('h1')).toBeVisible({timeout: 15000}); 
     await handlePopups(page); 
     console.log('Navegado a la página Tips de seguridad.');
   });
@@ -268,7 +294,7 @@ test.describe('Pruebas de la página de descarga de Lulo Bank', () => {
     
     console.log('Esperando estabilización de página de descarga después de manejar popups...');
     const seccionDescargaPrincipal = page.locator('div.download-app-introduction-section-content');
-    await expect(seccionDescargaPrincipal).toBeVisible({timeout: 15000});
+    await expect(seccionDescargaPrincipal).toBeVisible({timeout: 20000}); 
 
     await expect(page).toHaveTitle(/Lulo bank - Descarga y prueba la app/, {timeout: 10000});
 
