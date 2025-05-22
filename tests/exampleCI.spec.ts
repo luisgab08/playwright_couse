@@ -282,7 +282,6 @@ test.describe('Pruebas de Navegación Directa LuloBank', () => {
 
   test('Snacks', async ({ page }) => {
     await page.locator('//a[contains(@href, \'/snacks\')]').getByText('Snacks').click();
-    //await page.waitForURL(/.*\/snacks/, { timeout: 60000 });
     await expect(page).toHaveTitle('Lulo bank - Snacks');
     await handlePopups(page); 
     console.log('Navegado a la página de Snacks.');
@@ -290,7 +289,6 @@ test.describe('Pruebas de Navegación Directa LuloBank', () => {
 
   test('Nosotros', async ({ page }) => {
     await page.locator('//a[contains(@href, \'/about\')]').getByText('Nosotros').click();
-    //await page.waitForURL(/.*\/about/, { timeout: 60000 });
     await expect(page).toHaveTitle('Lulo bank - Nosotros');
     await handlePopups(page); 
     console.log('Navegado a la página Nosotros.');
@@ -298,7 +296,6 @@ test.describe('Pruebas de Navegación Directa LuloBank', () => {
 
   test('Tips de seguridad', async ({ page }) => {
     await page.locator('//a[contains(@href, \'/tips-de-seguridad\')]').getByText('Tips de seguridad').click();
-    //await page.waitForURL(/.*\/tips-de-seguridad/, { timeout: 60000 });
     await expect(page).toHaveTitle('Lulo bank - Tips de seguridad');
     await handlePopups(page); 
     console.log('Navegado a la página Tips de seguridad.');
