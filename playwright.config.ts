@@ -54,7 +54,7 @@ export default defineConfig({
       } },
     },
 
- /*   {
+ /*   { ihohouhouho
       //workers: 1,
       name: 'webkit',
       use: { ...devices['Desktop Safari'], launchOptions: {
